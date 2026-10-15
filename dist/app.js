@@ -205,7 +205,7 @@ function validateStep(currentStep) {
     if ((field.name === 'name' || field.name === 'location') && field.value.length < 2) { showError(`Please enter at least two characters for your ${names[field.name]}.`,field); return false; }
     if (field.name === 'description' && (field.value.length < 10 || field.value.length > 4000)) { showError('Describe the project in 10–4,000 characters.',field); return false; }
     if (field.name === 'phone' && field.value && !/^[+()\d\s.\-]+$/.test(field.value)) { showError('Use numbers and common phone punctuation for your phone number.',field); return false; }
-    if (field.name === 'phone' && field.value && !/^\d{7,15}$/.test(field.value.replace(/\D/g,''))) { showError('Enter a phone number with 7–15 digits, or leave this optional field blank.',field); return false; }
+    if (field.name === 'phone' && !/^\d{7,15}$/.test(field.value.replace(/\D/g,''))) { showError('Enter a phone number with 7–15 digits so AMYO can contact you.',field); return false; }
     if (field.maxLength > 0 && field.value.length > field.maxLength) { showError(`Please shorten your ${names[field.name] || field.name}.`,field); return false; }
   }
   return true;
