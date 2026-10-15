@@ -118,7 +118,7 @@ $('#sign-out').addEventListener('click',async () => {
   try { const result = await api('logout',{method:'POST',data:{}}); confirmed = result.ok === true; }
   catch (_) { /* Clear the private workspace even when server sign-out cannot be confirmed. */ }
   finally {
-    showLogin(confirmed ? 'You have signed out.' : 'Signed out on this browser. Server sign-out could not be confirmed. Close this window if using a shared device.');
+    showLogin(confirmed ? 'You have signed out.' : 'Private details have been cleared from this page, but sign-out could not be confirmed. Your session may still be active. Reconnect, refresh and sign out again before leaving this device.');
     $('#sign-out').disabled = false;
   }
 });
