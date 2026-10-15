@@ -22,7 +22,7 @@ declare
     'description', 'Synthetic deployment verification. This transaction will be rolled back.',
     'name', 'AMYO Deployment Verification',
     'email', 'verification@example.invalid',
-    'phone', '',
+    'phone', '+1 202 555 0147',
     'consent', true
   );
   v_result jsonb;
