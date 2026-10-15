@@ -25,11 +25,18 @@ Database setup and verification
 1. Open the AMYO Supabase project above, then its SQL editor.
 2. Execute supabase/schema.sql. This creates private enquiries and rate-limit
    tables, enables RLS, and grants the submission RPC only to service_role.
-3. Execute supabase/verify.sql. It checks create, duplicate, changed-payload
+3. Execute supabase/admin.sql. This adds the admin inbox fields, private
+   authentication limits and session checks, and requires phone numbers on
+   new enquiries. Historical records remain unchanged.
+4. Execute supabase/verify.sql. It checks create, duplicate, changed-payload
    conflict, rate limiting, consent, and denied anonymous/authenticated access.
    The script rolls back all synthetic test records. If an assertion fails,
    run ROLLBACK before retrying or investigating.
-4. Keep database access restricted to authorized AMYO operators.
+5. Execute supabase/admin-verify.sql as postgres. It rolls back synthetic
+   fixtures and checks admin permissions, legacy phones, status/notes,
+   optimistic update conflicts, searches, and authentication rate limits.
+   It briefly locks the enquiry table. No Auth users or sessions are changed.
+6. Keep database access restricted to authorized AMYO operators.
 
 Vercel deployment
 Import the AMYO GitHub repository above into the AMYO Vercel account.
@@ -37,7 +44,7 @@ Use the repository folder containing package.json and vercel.json as the root.
 Framework preset: Other. Node.js version: 22.x.
 Build command: npm test. Output directory: dist.
 Static website files are already authored in dist/; no site compilation is
-required. Vercel separately deploys api/inquiries.js as the server function.
+required. Vercel separately deploys api/inquiries.js and api/admin.js.
 The checked-in vercel.json supplies these settings and security headers.
 
 Add these environment variables in Vercel project settings:
@@ -75,11 +82,42 @@ details returns success without creating another enquiry; changed details
 with the same UUID return a conflict. Keep the request ID during retries.
 Five new enquiries per hashed client IP are allowed per 30-minute window.
 
-Authorized AMYO operators review new enquiries in the Supabase Table Editor,
-table public.inquiries, sorted by created_at. The site does not automatically
+The owner reviews new enquiries at https://amyoconstruction.com/admin/.
+The inbox includes customer names, phone numbers, email, project details,
+submission times, status and internal notes. Search and status filters work
+across all enquiries with 25 records per page. The site does not automatically
 send email notifications or confirmation emails. Do not promise that an email
 was sent merely because the database saved an enquiry. Contact the client
 using the details they supplied and consented to share.
+
+Admin sign-in
+Only the verified email amyoconstruction@gmail.com is authorized. Ordinary
+Supabase users, public visitors and other accounts cannot read the inbox.
+Use Email me a sign-in link for first access. Open the email link in the same
+browser used to request it; a short-lived browser verifier binds the link to
+that browser. After signing in, use Set sign-in password and enter your own
+password (12-128 characters). You can then use password sign-in directly.
+Never share a password in chat or add it to source files.
+
+Supabase Authentication > URL Configuration must use this Site URL:
+https://amyoconstruction.com/admin/
+The only needed redirect URL is the exact same URL; do not add wildcards.
+Email confirmation stays enabled. The default Supabase email service sends
+only to organization members and currently permits two messages per hour.
+It is best-effort; password sign-in does not use this email quota. For a
+production mail-delivery guarantee, configure your own SMTP provider before
+depending on frequent email-link sign-ins. Passwordless access uses Supabase's
+default email template; no template changes or paid plan are required.
+
+The server verifies the email and active Supabase session on every protected
+request. Sign-in tokens use HttpOnly cookies, never browser local storage.
+Sessions end after eight hours and signing out revokes the current session.
+The page is excluded from indexing; authorization, not a hidden URL, protects
+customer data. New enquiries start at New and can move to Contacted, Quoted,
+Won or Closed. Saving notes does not send anything to the customer.
+If another tab changes a record first, reload its latest details before saving.
+Historical enquiries without a phone display Not provided; new submissions
+must include a valid contact number. The admin interface does not delete leads.
 
 Retention
 Keep enquiries only while AMYO needs them for the requested work and its
