@@ -45,6 +45,7 @@ test('preview serves only website files with MIME types, HEAD support and safe A
     assert.equal((await visit(server, '/%E0%A4%A')).status, 400);
     assert.deepEqual(JSON.parse((await visit(server, '/api/inquiries')).body), { available: false });
     assert.equal((await visit(server, '/api/inquiries', 'POST', '{}')).status, 503);
+    assert.equal((await visit(server, '/api/admin?action=session')).status, 503);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     const cleanupTarget = path.resolve(workspace);

@@ -52,12 +52,20 @@ test('POST fails safely when not configured and never requests storage', async (
   assert.match(result.body.error, /Amyoconstruction@gmail\.com/);
 });
 
-test('normalizes valid payload and permits optional phone and budget', () => {
-  const result = validateInquiry(enquiry({ name: '  Example Client ', email: 'CLIENT@EXAMPLE.COM', phone: undefined, budget: undefined }));
+test('normalizes valid payload and permits optional budget while requiring phone', () => {
+  const result = validateInquiry(enquiry({ name: '  Example Client ', email: 'CLIENT@EXAMPLE.COM', budget: undefined }));
   assert.equal(result.payload.name, 'Example Client');
   assert.equal(result.payload.email, 'client@example.com');
-  assert.equal(result.payload.phone, '');
+  assert.equal(result.payload.phone, '+63 917 000 1234');
   assert.equal(result.payload.budget, '');
+});
+
+test('requires a valid phone for every new public enquiry', async () => {
+  for (const phone of [undefined, '', ' ', '123', '+63 abc 1234567890']) {
+    const result = await invoke({ body: enquiry({ phone }) });
+    assert.equal(result.statusCode, 400);
+    assert.ok(result.body.fields.phone);
+  }
 });
 
 test('rejects missing consent, string consent, malformed identity and invalid fields', async () => {
