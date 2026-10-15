@@ -118,11 +118,11 @@ export function validateInquiry(input) {
     description: text('description', 10, 4000),
     name: text('name', 2, 120),
     email: text('email', 3, 254).toLowerCase(),
-    phone: text('phone', 0, 30, true),
+    phone: text('phone', 7, 30),
     consent: input.consent === true,
   };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) errors.email = 'Please enter a valid email address.';
-  if (payload.phone && (!/^[+\d\s().-]+$/.test(payload.phone) || !/^\d{7,15}$/.test(payload.phone.replace(/\D/g, '')))) errors.phone = 'Please enter a valid phone number.';
+  if (!/^[+\d\s().-]+$/.test(payload.phone) || !/^\d{7,15}$/.test(payload.phone.replace(/\D/g, ''))) errors.phone = 'Please enter a valid phone number.';
   if (input.consent !== true) errors.consent = 'Please agree to being contacted about this enquiry.';
   if (typeof input.requestId !== 'string' || !UUID.test(input.requestId)) errors.requestId = 'Please refresh the form and try again.';
   if (input.website !== undefined && (typeof input.website !== 'string' || input.website.length > 2000)) errors.website = 'Invalid form field.';
