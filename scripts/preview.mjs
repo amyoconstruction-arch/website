@@ -4,6 +4,7 @@ import { realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHandler } from '../api/inquiries.js';
+import { createAdminHandler } from '../api/admin.js';
 
 const STATIC_ROOT = fileURLToPath(new URL('../dist/', import.meta.url));
 const MIME = {
@@ -42,7 +43,7 @@ function plain(req, res, status, message, headers = {}) {
   res.end(req.method === 'HEAD' ? undefined : body);
 }
 
-export function createPreviewServer({ directory = STATIC_ROOT, apiHandler = createHandler({ env: {} }) } = {}) {
+export function createPreviewServer({ directory = STATIC_ROOT, apiHandler = createHandler({ env: {} }), adminHandler = createAdminHandler({ env: {} }) } = {}) {
   const root = path.resolve(directory);
   return createServer(async (req, res) => {
     try {
@@ -54,6 +55,7 @@ export function createPreviewServer({ directory = STATIC_ROOT, apiHandler = crea
       }
       if (/[\0\\:]/.test(pathname)) return plain(req, res, 400, 'Invalid path.');
       if (pathname === '/api/inquiries') return await apiHandler(req, res);
+      if (pathname === '/api/admin') return await adminHandler(req, res);
       if (!['GET', 'HEAD'].includes(req.method)) return plain(req, res, 405, 'Method not allowed.', { Allow: 'GET, HEAD' });
 
       let file = path.resolve(root, `.${pathname}`);
@@ -91,7 +93,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     process.exitCode = 1;
   } else {
     const enableEnquiries = process.env.PREVIEW_ENABLE_INQUIRIES === 'true';
-    const server = createPreviewServer({ apiHandler: createHandler({ env: enableEnquiries ? process.env : {} }) });
+    const environment = enableEnquiries ? process.env : {};
+    const server = createPreviewServer({ apiHandler: createHandler({ env: environment }), adminHandler: createAdminHandler({ env: environment }) });
     server.requestTimeout = 15000;
     server.headersTimeout = 10000;
     server.on('error', (error) => {
